@@ -34,8 +34,11 @@ export default function PrivacyPage() {
             <p>
               <strong>हम आपका व्यक्तिगत डेटा कभी किसी को नहीं बेचते, किराए पर नहीं देते,
               या किसी भी कारण से किसी के साथ व्यापार नहीं करते।</strong> आपकी जानकारी
-              केवल आपकी रीडिंग तैयार करने और भेजने के लिए उपयोग की जाती है, और केवल इस
-              वेबसाइट को चलाने के लिए आवश्यक सेवा प्रदाताओं के साथ साझा की जाती है।
+              केवल आपकी रीडिंग तैयार करने और भेजने के लिए उपयोग की जाती है।
+            </p>
+            <h2>डेटा प्रतिधारण</h2>
+            <p>
+              आपका डेटा 30 दिनों से अधिक समय तक संग्रहीत नहीं रखा जाता है।
             </p>
             <h2>डेटा हटाना</h2>
             <p>
@@ -67,22 +70,20 @@ export default function PrivacyPage() {
               Payments are processed directly by Razorpay. We never see or store your
               card or bank details.
             </p>
-            <h2>Deleting your data</h2>
-            <p>
-              To request deletion of your data, email us at{" "}
-              <a href="mailto:hello@palmara.in">hello@palmara.in</a>.
-            </p>
             <h2>We do not sell your data</h2>
             <p>
               <strong>We do not sell, rent, or trade your personal data to anyone, for
               any reason.</strong> Your information is used only to generate and deliver
-              your reading, and is shared only with the specific service providers
-              listed below, solely to run this website.
+              your reading.
             </p>
-            <h2>Third parties we use</h2>
+            <h2>Data retention</h2>
             <p>
-              Google Gemini (to generate reading text), Supabase (database hosting),
-              and Razorpay (payments). None of these receive your palm photo.
+              Your data is not retained for more than 30 days.
+            </p>
+            <h2>Deleting your data</h2>
+            <p>
+              To request deletion of your data, email us at{" "}
+              <a href="mailto:hello@palmara.in">hello@palmara.in</a>.
             </p>
             <p className="updated">
               Last updated: 2026

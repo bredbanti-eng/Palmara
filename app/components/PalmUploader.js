@@ -207,16 +207,16 @@ export default function PalmUploader() {
   }
 
   // Both languages are already on the client after generation, so the PDF
-  // (always English — jsPDF's default fonts don't render Devanagari) needs
-  // no extra network round-trip; it's just a flatten of what we already have.
-  function handleDownloadPdf() {
+  // needs no extra network round-trip — just pick whichever language's
+  // sections match the currently displayed report.
+  async function handleDownloadPdf() {
     setIsDownloading(true);
-    generateReportPdf({
+    await generateReportPdf({
       brand: "Palmara",
       tagline: "Vedic Palm Readings",
       name,
-      sections: sectionsEn,
-      lang: "en",
+      sections: currentSections,
+      lang,
     });
     setIsDownloading(false);
   }
@@ -225,12 +225,14 @@ export default function PalmUploader() {
     setPaid(true);
     setEmailModalStatus("sending");
 
-    const pdfBase64 = generateReportPdfBase64({
+    const emailLang = reportLangRef.current;
+    const emailSections = emailLang === "hi" ? sectionsHi : sectionsEn;
+    const pdfBase64 = await generateReportPdfBase64({
       brand: "Palmara",
       tagline: "Vedic Palm Readings",
       name,
-      sections: sectionsEn,
-      lang: "en",
+      sections: emailSections,
+      lang: emailLang,
     });
 
     try {

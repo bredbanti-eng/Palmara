@@ -32,15 +32,17 @@ export default function ReportPage({ params }) {
   async function handleDownload() {
     setDownloading(true);
 
-    // New rows already have structured English sections — no need for the
-    // translate-report round-trip at all in that case.
+    // New rows already have structured sections in both languages — no need
+    // for the translate-report round-trip at all in that case. Download in
+    // whichever language the page is currently showing.
     if (report.sections_en) {
-      generateReportPdf({
+      const sections = lang === "hi" ? report.sections_hi : report.sections_en;
+      await generateReportPdf({
         brand: "Palmara",
         tagline: "Vedic Palm Readings",
         name: report.name,
-        sections: report.sections_en,
-        lang: "en",
+        sections,
+        lang,
       });
       setDownloading(false);
       return;
@@ -57,7 +59,7 @@ export default function ReportPage({ params }) {
       const data = await res.json();
       englishText = data.englishText || report.full_text;
     }
-    generateReportPdf({
+    await generateReportPdf({
       brand: "Palmara",
       tagline: "Vedic Palm Readings",
       name: report.name,
