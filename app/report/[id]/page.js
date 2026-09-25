@@ -7,6 +7,7 @@ import { IconAlert } from "../../components/icons";
 import SectionCard from "../../components/SectionCard";
 import PathAheadCard from "../../components/PathAheadCard";
 import PalmSnapshotCard from "../../components/PalmSnapshotCard";
+import BirthChartSnapshotCard from "../../components/BirthChartSnapshotCard";
 import { REPORT_SECTIONS } from "@/lib/reportSections";
 import { generateReportPdf } from "@/lib/generateReportPdf";
 import { buildPalmSnapshot } from "@/lib/palmSnapshot";
@@ -47,6 +48,7 @@ export default function ReportPage({ params }) {
         name: report.name,
         sections,
         snapshot,
+        chart: report.chart,
         lang,
       });
       setDownloading(false);
@@ -102,6 +104,18 @@ export default function ReportPage({ params }) {
                     : null;
                 return (
                   <>
+                    {report.chart && (
+                      <BirthChartSnapshotCard
+                        chart={report.chart}
+                        lang={lang}
+                        title={tr("birth_chart_title")}
+                        approxNote={tr("birth_chart_approx_note")}
+                        ascendantLabel={tr("birth_chart_ascendant_label")}
+                        moonLabel={tr("birth_chart_moon_label")}
+                        nakshatraLabel={tr("birth_chart_nakshatra_label")}
+                        sunLabel={tr("birth_chart_sun_label")}
+                      />
+                    )}
                     {snapshot && (
                       <PalmSnapshotCard
                         title={tr("palm_snapshot_title")}

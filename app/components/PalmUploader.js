@@ -9,6 +9,7 @@ import Stepper from "./Stepper";
 import SectionCard from "./SectionCard";
 import PathAheadCard from "./PathAheadCard";
 import PalmSnapshotCard from "./PalmSnapshotCard";
+import BirthChartSnapshotCard from "./BirthChartSnapshotCard";
 import StickyUnlockBar from "./StickyUnlockBar";
 import UnlockLanguageModal from "./UnlockLanguageModal";
 import { IconUpload, IconAlert, IconCheck } from "./icons";
@@ -33,6 +34,7 @@ export default function PalmUploader() {
   const [email, setEmail] = useState("");
   const [sectionsEn, setSectionsEn] = useState(null);
   const [sectionsHi, setSectionsHi] = useState(null);
+  const [chart, setChart] = useState(null);
   const [reportId, setReportId] = useState(null);
   const [paid, setPaid] = useState(false);
   const [emailModalStatus, setEmailModalStatus] = useState(null); // null | sending | sent | failed
@@ -200,6 +202,7 @@ export default function PalmUploader() {
 
       setSectionsEn(data.sectionsEn);
       setSectionsHi(data.sectionsHi);
+      setChart(data.chart || null);
       setReportId(data.reportId);
       setStatus("result");
     } catch (err) {
@@ -220,6 +223,7 @@ export default function PalmUploader() {
       name,
       sections: currentSections,
       snapshot,
+      chart,
       lang,
     });
     setIsDownloading(false);
@@ -238,6 +242,7 @@ export default function PalmUploader() {
       name,
       sections: emailSections,
       snapshot: emailSnapshot,
+      chart,
       lang: emailLang,
     });
 
@@ -337,6 +342,19 @@ export default function PalmUploader() {
               </span>
               {lang === "hi" ? "अनलॉक हो गया" : "Unlocked"}
             </div>
+          )}
+
+          {chart && (
+            <BirthChartSnapshotCard
+              chart={chart}
+              lang={lang}
+              title={tr("birth_chart_title")}
+              approxNote={tr("birth_chart_approx_note")}
+              ascendantLabel={tr("birth_chart_ascendant_label")}
+              moonLabel={tr("birth_chart_moon_label")}
+              nakshatraLabel={tr("birth_chart_nakshatra_label")}
+              sunLabel={tr("birth_chart_sun_label")}
+            />
           )}
 
           {snapshot && (

@@ -1084,6 +1084,14 @@ a {
   margin: 0;
 }
 
+.chart-approx-note {
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  font-style: italic;
+  text-align: center;
+  margin: var(--space-3) 0 0;
+}
+
 /* ===== Report / result ===== */
 .report-card {
   background: var(--panel);
