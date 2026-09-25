@@ -5,7 +5,7 @@ export async function GET(request, { params }) {
   try {
     const { data: report, error } = await getSupabase()
       .from("reports")
-      .select("name, dob, birth_time, birth_place, hand_shape, language, sections_en, sections_hi, full_text, teaser_text, paid")
+      .select("name, dob, birth_time, birth_place, hand_shape, seed, language, sections_en, sections_hi, full_text, teaser_text, paid")
       .eq("id", params.id)
       .single();
 

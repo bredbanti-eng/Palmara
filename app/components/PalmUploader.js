@@ -8,12 +8,14 @@ import ScanningPreview from "./ScanningPreview";
 import Stepper from "./Stepper";
 import SectionCard from "./SectionCard";
 import PathAheadCard from "./PathAheadCard";
+import PalmSnapshotCard from "./PalmSnapshotCard";
 import StickyUnlockBar from "./StickyUnlockBar";
 import UnlockLanguageModal from "./UnlockLanguageModal";
 import { IconUpload, IconAlert, IconCheck } from "./icons";
 import { classifyHandShape, seedFromLandmarks } from "@/lib/handClassifier";
 import { generateReportPdf, generateReportPdfBase64 } from "@/lib/generateReportPdf";
 import { REPORT_SECTIONS } from "@/lib/reportSections";
+import { buildPalmSnapshot } from "@/lib/palmSnapshot";
 import { useRazorpayCheckout } from "@/lib/useRazorpayCheckout";
 import { getTodaysUnlockCount } from "@/lib/socialProofCounter";
 import { useLang } from "./LangProvider";
@@ -50,6 +52,7 @@ export default function PalmUploader() {
   const steps = [tr("stepper_upload"), tr("stepper_details"), tr("stepper_reading")];
   const stepIndex = reportId ? 2 : handShape ? 1 : 0;
   const currentSections = lang === "hi" ? sectionsHi : sectionsEn;
+  const snapshot = handShape && seed != null ? buildPalmSnapshot(handShape, seed, lang) : null;
 
   const checkout = useRazorpayCheckout({
     reportId,
@@ -216,6 +219,7 @@ export default function PalmUploader() {
       tagline: "Vedic Palm Readings",
       name,
       sections: currentSections,
+      snapshot,
       lang,
     });
     setIsDownloading(false);
@@ -227,11 +231,13 @@ export default function PalmUploader() {
 
     const emailLang = reportLangRef.current;
     const emailSections = emailLang === "hi" ? sectionsHi : sectionsEn;
+    const emailSnapshot = handShape && seed != null ? buildPalmSnapshot(handShape, seed, emailLang) : null;
     const pdfBase64 = await generateReportPdfBase64({
       brand: "Palmara",
       tagline: "Vedic Palm Readings",
       name,
       sections: emailSections,
+      snapshot: emailSnapshot,
       lang: emailLang,
     });
 
@@ -333,6 +339,17 @@ export default function PalmUploader() {
             </div>
           )}
 
+          {snapshot && (
+            <PalmSnapshotCard
+              title={tr("palm_snapshot_title")}
+              items={[
+                { label: `${tr("palm_snapshot_hand_label")} — ${snapshot.handShape.label}`, text: snapshot.handShape.text },
+                { label: tr("palm_snapshot_heart_label"), text: snapshot.heartLine.text },
+                { label: tr("palm_snapshot_fate_label"), text: snapshot.fateLine.text },
+              ]}
+            />
+          )}
+
           <div className="section-list">
             {REPORT_SECTIONS.map((s) => {
               const data = currentSections[s.id];
@@ -345,6 +362,7 @@ export default function PalmUploader() {
                     years={data.years}
                     locked={!paid}
                     unlockLabel={tr("section_locked_cta")}
+                    insightsLabel={tr("path_ahead_insights_label")}
                     onUnlockClick={openUnlockFlow}
                   />
                 );
@@ -354,7 +372,9 @@ export default function PalmUploader() {
                   key={s.id}
                   title={s.title[lang]}
                   hook={data.hook}
-                  body={data.body}
+                  preview={data.preview}
+                  teaser={data.teaser}
+                  deepDive={data.deepDive}
                   locked={!paid}
                   unlockLabel={tr("section_locked_cta")}
                   onUnlockClick={openUnlockFlow}

@@ -2,41 +2,51 @@
 
 import { IconLock } from "./icons";
 
-const VISIBLE_WORDS = 28;
+// preview is genuinely complete free content (not a mid-sentence word-count
+// cutoff of the paid text) — so the free/locked split falls on a clean
+// paragraph boundary instead of chopping a sentence in half. teaser is a
+// specific, always-visible one-liner naming what's inside deepDive, meant to
+// read as a real curiosity hook rather than a generic "unlock for more".
+export default function SectionCard({ title, hook, preview, teaser, deepDive, body, locked, unlockLabel, onUnlockClick }) {
+  // body is a fallback for any legacy pre-restructure report row.
+  const previewText = preview || body;
+  const deepDiveText = deepDive || "";
 
-export default function SectionCard({ title, hook, body, locked, unlockLabel, onUnlockClick }) {
   if (!locked) {
     return (
       <div className="card section-card fade-up">
         <h3 className="section-title">{title}</h3>
         {hook && <p className="section-hook">{hook}</p>}
-        <p className="section-body">{body}</p>
+        <p className="section-body">{previewText}</p>
+        {deepDiveText && <p className="section-body">{deepDiveText}</p>}
       </div>
     );
   }
-
-  const words = body.trim().split(/\s+/);
-  const visible = words.slice(0, VISIBLE_WORDS).join(" ");
-  const rest = words.slice(VISIBLE_WORDS).join(" ");
 
   return (
     <div className="card section-card fade-up">
       <h3 className="section-title">{title}</h3>
       {hook && <p className="section-hook">{hook}</p>}
-      {/* Clipped independently of the hook above, so a longer (2-3 line)
-          hook never pushes the visible body words into the blur zone. */}
-      <div className="section-locked-wrap">
-        <p className="section-body">
-          {visible}
-          {rest && <span className="section-continuation" aria-hidden="true"> {rest}</span>}
+      <p className="section-body">{previewText}</p>
+      {teaser && (
+        <p className="section-teaser">
+          <IconLock size={13} />
+          {teaser}
         </p>
-        <button type="button" className="section-lock-overlay" onClick={onUnlockClick}>
-          <span className="section-lock-chip">
-            <IconLock size={16} />
-            {unlockLabel}
-          </span>
-        </button>
-      </div>
+      )}
+      {deepDiveText && (
+        <div className="section-locked-wrap">
+          <p className="section-body section-continuation" aria-hidden="true">
+            {deepDiveText}
+          </p>
+          <button type="button" className="section-lock-overlay" onClick={onUnlockClick}>
+            <span className="section-lock-chip">
+              <IconLock size={16} />
+              {unlockLabel}
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

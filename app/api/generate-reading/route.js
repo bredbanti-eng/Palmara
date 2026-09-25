@@ -2,38 +2,21 @@ import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabaseClient";
 import { callGeminiJSON } from "@/lib/gemini";
 import { REPORT_SECTIONS, flattenSections } from "@/lib/reportSections";
+import { getPalmFacts, HAND_SHAPE_TRAITS, HEART_LINE_PROMPT_TEXT, FATE_LINE_PROMPT_TEXT } from "@/lib/palmSnapshot";
 
-function seededRandom(seed) {
-  let s = seed;
-  return () => {
-    s = (s * 9301 + 49297) % 233280;
-    return s / 233280;
-  };
-}
-
-const HAND_SHAPE_TRAITS = {
-  earth: {
-    en: "a grounded, practical hand shape — square palm, shorter fingers, often linked to being steady and hands-on.",
-    hi: "एक स्थिर, व्यावहारिक हाथ की आकृति — चौकोर हथेली, छोटी उंगलियाँ, अक्सर स्थिरता और व्यावहारिकता से जुड़ी।",
-  },
-  air: {
-    en: "a square palm with long fingers — traditionally linked to sharp thinking and curiosity.",
-    hi: "चौकोर हथेली और लंबी उंगलियाँ — पारंपरिक रूप से तीव्र सोच और जिज्ञासा से जुड़ी।",
-  },
-  fire: {
-    en: "a rectangular palm with shorter fingers — often associated with energy and initiative.",
-    hi: "आयताकार हथेली और छोटी उंगलियाँ — अक्सर ऊर्जा और पहल करने की क्षमता से जुड़ी।",
-  },
-  water: {
-    en: "a long, narrow palm with long fingers — traditionally tied to sensitivity and imagination.",
-    hi: "लंबी, संकरी हथेली और लंबी उंगलियाँ — पारंपरिक रूप से संवेदनशीलता और कल्पनाशीलता से जुड़ी।",
-  },
-};
-
+// Each prose section carries four distinct parts so the report reads as a
+// free-preview-then-unlock progression rather than one blurred paragraph:
+// hook (curiosity line) -> preview (genuinely complete free insight) ->
+// teaser (names what's locked) -> deepDive (the paid specific/detailed part).
 const PROSE_SCHEMA = {
   type: "OBJECT",
-  properties: { hook: { type: "STRING" }, body: { type: "STRING" } },
-  required: ["hook", "body"],
+  properties: {
+    hook: { type: "STRING" },
+    preview: { type: "STRING" },
+    teaser: { type: "STRING" },
+    deepDive: { type: "STRING" },
+  },
+  required: ["hook", "preview", "teaser", "deepDive"],
 };
 
 const TIMELINE_SCHEMA = {
@@ -44,8 +27,12 @@ const TIMELINE_SCHEMA = {
       type: "ARRAY",
       items: {
         type: "OBJECT",
-        properties: { year: { type: "INTEGER" }, theme: { type: "STRING" } },
-        required: ["year", "theme"],
+        properties: {
+          year: { type: "INTEGER" },
+          theme: { type: "STRING" },
+          insight: { type: "STRING" },
+        },
+        required: ["year", "theme", "insight"],
       },
     },
   },
@@ -61,15 +48,9 @@ const SECTIONS_SCHEMA = {
 };
 
 function buildSectionsPrompt({ handShape, seed, language, name, dob, birthTime, birthTimeUnknown, birthPlace }) {
-  const rand = seededRandom(seed);
-  const heartLine =
-    rand() > 0.5
-      ? { en: "deep and clearly marked", hi: "गहरी और स्पष्ट रूप से अंकित" }
-      : { en: "faint and delicate", hi: "हल्की और नाज़ुक" };
-  const fateLine =
-    rand() > 0.4
-      ? { en: "runs unusually far up the palm", hi: "हथेली में असामान्य रूप से ऊपर तक जाती है" }
-      : { en: "starts closer to the middle of the hand", hi: "हथेली के मध्य के करीब से शुरू होती है" };
+  const { heartLine: heartLineKey, fateLine: fateLineKey } = getPalmFacts(seed);
+  const heartLine = HEART_LINE_PROMPT_TEXT[heartLineKey][language];
+  const fateLine = FATE_LINE_PROMPT_TEXT[fateLineKey][language];
   const traits = HAND_SHAPE_TRAITS[handShape]?.[language] || HAND_SHAPE_TRAITS.earth[language];
   const timeStr = birthTimeUnknown ? (language === "hi" ? "अज्ञात" : "unknown") : birthTime;
   const currentYear = new Date().getFullYear();
@@ -79,24 +60,32 @@ function buildSectionsPrompt({ handShape, seed, language, name, dob, birthTime, 
     const sectionList = proseSections.map((s, i) => `${i + 1}. "${s.id}" — ${s.title.hi}: ${s.brief.hi}`).join("\n");
     return `आप पालमारा की इन-हाउस टीम के एक वरिष्ठ ज्योतिषी हैं — सामुद्रिक शास्त्र (हस्तरेखा) और वैदिक ज्योतिष दोनों में निपुण। "${name}" नाम के ग्राहक के लिए एक गर्मजोशी भरी, आत्मविश्वास से भरी और व्यक्तिगत महसूस होने वाली रीडिंग हिंदी में लिखें। कभी भी एक AI सहायक की तरह न लिखें — कभी यह न कहें कि आप "गणना नहीं कर सकते" या आपके पास "डेटा नहीं है"। एक अनुभवी ज्योतिषी की तरह आत्मविश्वास और गर्मजोशी के साथ पारंपरिक व्याख्याएं दें।
 
-हाथ और जन्म विवरण:
+हाथ और जन्म विवरण (ये पहले ही एक अलग मुफ़्त "पाम स्नैपशॉट" कार्ड में पाठक को दिखाए जा चुके हैं, तो नीचे के खंडों में इन्हें सीधे न दोहराएं — इसके बजाय इनके आधार पर आगे की, नई व्याख्याएं बनाएं):
 - हाथ की आकृति: ${traits}
-- हृदय रेखा: ${heartLine.hi}
-- भाग्य रेखा: ${fateLine.hi}
+- हृदय रेखा: ${heartLine}
+- भाग्य रेखा: ${fateLine}
 - जन्म तिथि: ${dob}, जन्म समय: ${timeStr}, जन्म स्थान: ${birthPlace}
 
-पांच खंड लिखें ("personality", "career", "wealth", "love", "challenges"), हर एक के लिए:
-- "hook": एक आकर्षक, विशिष्ट, उत्सुकता जगाने वाला वाक्य (12-20 शब्द) जो बॉडी टेक्स्ट की पहली पंक्ति को दोहराए बिना यह झलक दे कि खंड में क्या है — पाठक को आगे पढ़ने के लिए उत्सुक करे।
-- "body": 120-180 शब्द, व्यक्तिगत और विशिष्ट महसूस होने वाला — हाथ/जन्म विवरण का ज़िक्र केवल पहले खंड में नहीं, स्वाभाविक रूप से पूरे पाठ में करें।
+यह रिपोर्ट दो चरणों में पढ़ी जाती है — पहले एक मुफ़्त झलक, फिर भुगतान के बाद पूरी पहुंच — इसलिए हर खंड में चार अलग-अलग हिस्से होने चाहिए, हर एक का अपना काम। हर खंड के लिए ये चारों लिखें:
+
+- "hook" (12-20 शब्द): सबसे ऊपर एक आकर्षक, विशिष्ट, उत्सुकता जगाने वाला वाक्य — यह "preview" की शुरुआती पंक्ति को दोहराए बिना खंड की दिशा की झलक दे।
+- "preview" (55-80 शब्द, 3-4 पूरे वाक्य): यह मुफ़्त सामग्री है, जिसे पाठक बिना भुगतान किए देखता है। यह वास्तव में पूर्ण, उपयोगी और विशिष्ट झलक होनी चाहिए — असली मूल्य, भरावट नहीं — कुछ ऐसा जिस पर पाठक कुछ और पढ़े बिना भी अमल कर सके। इसे किसी अधिक विशिष्ट बात की ओर एक स्वाभाविक मोड़ पर समाप्त करें, बिना अभी वह विशिष्ट बात बताए।
+- "teaser" (8-14 शब्द): एक तीखा, ठोस वाक्य जो बताए कि पेवॉल के पीछे ठीक क्या छिपा है — किसी अध्याय के शीर्षक या प्रश्न जैसा, इतना विशिष्ट कि असली लगे (जैसे "आपकी भाग्य रेखा में छिपा वह एक पैटर्न जो यह समयरेखा पूरी तरह बदल देता है")। कभी सामान्य न हो ("और जानने के लिए अनलॉक करें" जैसा कुछ नहीं)।
+- "deepDive" (160-220 शब्द): भुगतान वाली सामग्री — teaser में किया गया वादा पूरा करते हुए विशिष्ट विवरण, आत्मविश्वास और सटीकता के साथ समझाया गया, और एक स्पष्ट, व्यक्तिगत, व्यावहारिक सुझाव पर समाप्त हो जिसे पाठक तुरंत इस्तेमाल कर सके।
+
+पांच खंड लिखें ("personality", "career", "wealth", "love", "challenges"), हर एक के लिए ऊपर बताए अनुसार hook/preview/teaser/deepDive:
 
 ${sectionList}
 
-छठा खंड, "path_ahead", अलग है — इसमें एक पैराग्राफ की बजाय दें:
+छठा खंड, "path_ahead", अलग है — एक 5-वर्षीय समयरेखा। दें:
 - "hook": एक आकर्षक, आगे की ओर देखने वाला वाक्य।
-- "years": ${currentYear} से ${currentYear + 4} तक ठीक 5 प्रविष्टियों की एक सूची, हर एक {"year": <संख्या>, "theme": "<एक संक्षिप्त वाक्यांश, 8-15 शब्द, उस वर्ष के लिए एक पारंपरिक संभावना>"}।
+- "years": ${currentYear} से ${currentYear + 4} तक ठीक 5 प्रविष्टियाँ, हर एक में:
+  - "year": संख्या
+  - "theme": मुफ़्त, 8-15 शब्द — उस वर्ष के समग्र भाव के लिए एक संक्षिप्त पारंपरिक लेबल, हर पाठक को दिखे।
+  - "insight": भुगतान वाला, 20-35 शब्द — उस वर्ष के लिए विशिष्ट "क्यों" और एक व्यावहारिक सुझाव, theme से अधिक ठोस।
 
 केवल मान्य JSON लौटाएं, बिल्कुल इसी आकार में, कोई अन्य पाठ नहीं:
-{"personality": {"hook": "...", "body": "..."}, "career": {"hook": "...", "body": "..."}, "wealth": {"hook": "...", "body": "..."}, "love": {"hook": "...", "body": "..."}, "challenges": {"hook": "...", "body": "..."}, "path_ahead": {"hook": "...", "years": [{"year": ${currentYear}, "theme": "..."}, ...]}}
+{"personality": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "career": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "wealth": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "love": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "challenges": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "path_ahead": {"hook": "...", "years": [{"year": ${currentYear}, "theme": "...", "insight": "..."}, ...]}}
 
 कोई निश्चित भविष्यवाणी न करें — हर खंड और हर वर्ष के लिए बताएं कि यह पैटर्न परंपरागत रूप से व्यक्ति के बारे में क्या सुझाव देता है।`;
   }
@@ -104,24 +93,32 @@ ${sectionList}
   const sectionList = proseSections.map((s, i) => `${i + 1}. "${s.id}" — ${s.title.en}: ${s.brief.en}`).join("\n");
   return `You are a senior astrologer on Palmara's in-house panel — skilled in both Samudrik Shastra (palmistry) and Vedic astrology (Jyotish). Write a warm, confident, specific-feeling reading in English for a customer named "${name}". Never write like an AI assistant — never say you "cannot calculate" something or "don't have" the data. Write the way an experienced astrologer would: offering traditional interpretations with warmth and authority.
 
-Palm & birth details to weave in naturally:
+Palm & birth details (these are already shown to the reader for free in a separate "Palm Snapshot" card, so don't just restate them below — build NEW interpretation on top of them instead):
 - Hand shape: ${traits}
-- Heart line: ${heartLine.en}
-- Fate line: ${fateLine.en}
+- Heart line: ${heartLine}
+- Fate line: ${fateLine}
 - Date of birth: ${dob}, time of birth: ${timeStr}, place of birth: ${birthPlace}
 
-Write five sections ("personality", "career", "wealth", "love", "challenges"), each needing:
-- "hook": one punchy, specific, curiosity-building sentence (12-20 words) that teases what's in the section WITHOUT just repeating the body's opening line — it should make the reader want to keep reading.
-- "body": 120-180 words, feeling personal and specific — reference the palm/birth details naturally throughout, not only in the first section.
+This report is read in two stages — a free preview, then a paid unlock — so each section needs FOUR distinct parts, each with a different job. Write all four for every section:
+
+- "hook" (12-20 words): a punchy, specific curiosity-building line above everything else — teases the section's angle without repeating the preview's opening line.
+- "preview" (55-80 words, 3-4 full sentences): FREE content the reader sees with no payment. This must be a genuinely complete, useful, specific mini-insight — real value, not filler — something the reader could act on even if they read nothing else. End it on a natural pivot toward something more specific, without revealing that specific thing yet.
+- "teaser" (8-14 words): one sharp, concrete sentence naming exactly what's hidden behind the paywall — phrased like a chapter title or a question, specific enough to feel real (e.g. "The one habit in your fate line that changes this timeline"). Never generic ("Unlock to learn more").
+- "deepDive" (160-220 words): the paid content — the specific detail promised by the teaser, explained with real authority and precision, ending in one clear, personal, practical takeaway the reader can use.
+
+Write five sections ("personality", "career", "wealth", "love", "challenges"), each needing hook/preview/teaser/deepDive as described above:
 
 ${sectionList}
 
-The sixth section, "path_ahead", is different — instead of a body paragraph, give:
+The sixth section, "path_ahead", is different — a 5-year timeline. Give:
 - "hook": one punchy, forward-looking sentence.
-- "years": an array of exactly 5 entries for ${currentYear} through ${currentYear + 4}, each {"year": <number>, "theme": "<one short phrase, 8-15 words, a traditional possibility for that year>"}.
+- "years": exactly 5 entries for ${currentYear} through ${currentYear + 4}, each with:
+  - "year": the number
+  - "theme": FREE, 8-15 words — a short traditional label for that year's overall flavor, shown to every reader.
+  - "insight": PAID, 20-35 words — the specific "why" and one piece of practical guidance for that year, more concrete than the theme.
 
 Return ONLY valid JSON in exactly this shape, no other text:
-{"personality": {"hook": "...", "body": "..."}, "career": {"hook": "...", "body": "..."}, "wealth": {"hook": "...", "body": "..."}, "love": {"hook": "...", "body": "..."}, "challenges": {"hook": "...", "body": "..."}, "path_ahead": {"hook": "...", "years": [{"year": ${currentYear}, "theme": "..."}, ...]}}
+{"personality": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "career": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "wealth": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "love": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "challenges": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "path_ahead": {"hook": "...", "years": [{"year": ${currentYear}, "theme": "...", "insight": "..."}, ...]}}
 
 Do not make definite predictions — for every section and every year, describe what these patterns traditionally suggest about the person.`;
 }
@@ -132,9 +129,20 @@ function isValidSections(obj) {
     const entry = obj[s.id];
     if (!entry || typeof entry.hook !== "string" || !entry.hook.trim()) return false;
     if (s.kind === "timeline") {
-      return Array.isArray(entry.years) && entry.years.length >= 2 && entry.years.every((y) => y.year && y.theme);
+      return (
+        Array.isArray(entry.years) &&
+        entry.years.length >= 2 &&
+        entry.years.every((y) => y.year && y.theme && y.insight)
+      );
     }
-    return typeof entry.body === "string" && entry.body.trim().length > 0;
+    return (
+      typeof entry.preview === "string" &&
+      entry.preview.trim().length > 0 &&
+      typeof entry.teaser === "string" &&
+      entry.teaser.trim().length > 0 &&
+      typeof entry.deepDive === "string" &&
+      entry.deepDive.trim().length > 0
+    );
   });
 }
 
@@ -150,8 +158,8 @@ export async function POST(request) {
     // Both languages are generated up front so the header's EN/हिंदी toggle
     // can switch the report body instantly, with no re-generation wait.
     const [sectionsEn, sectionsHi] = await Promise.all([
-      callGeminiJSON(buildSectionsPrompt({ ...body, language: "en" }), SECTIONS_SCHEMA, { timeoutMs: 20000 }),
-      callGeminiJSON(buildSectionsPrompt({ ...body, language: "hi" }), SECTIONS_SCHEMA, { timeoutMs: 20000 }),
+      callGeminiJSON(buildSectionsPrompt({ ...body, language: "en" }), SECTIONS_SCHEMA, { timeoutMs: 30000 }),
+      callGeminiJSON(buildSectionsPrompt({ ...body, language: "hi" }), SECTIONS_SCHEMA, { timeoutMs: 30000 }),
     ]);
 
     if (sectionsEn?.quotaExceeded || sectionsHi?.quotaExceeded) {

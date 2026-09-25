@@ -6,8 +6,10 @@ import { useLang } from "../../components/LangProvider";
 import { IconAlert } from "../../components/icons";
 import SectionCard from "../../components/SectionCard";
 import PathAheadCard from "../../components/PathAheadCard";
+import PalmSnapshotCard from "../../components/PalmSnapshotCard";
 import { REPORT_SECTIONS } from "@/lib/reportSections";
 import { generateReportPdf } from "@/lib/generateReportPdf";
+import { buildPalmSnapshot } from "@/lib/palmSnapshot";
 
 export default function ReportPage({ params }) {
   const { lang, tr } = useLang();
@@ -37,11 +39,14 @@ export default function ReportPage({ params }) {
     // whichever language the page is currently showing.
     if (report.sections_en) {
       const sections = lang === "hi" ? report.sections_hi : report.sections_en;
+      const snapshot =
+        report.hand_shape && report.seed != null ? buildPalmSnapshot(report.hand_shape, report.seed, lang) : null;
       await generateReportPdf({
         brand: "Palmara",
         tagline: "Vedic Palm Readings",
         name: report.name,
         sections,
+        snapshot,
         lang,
       });
       setDownloading(false);
@@ -91,8 +96,25 @@ export default function ReportPage({ params }) {
             {(() => {
               const sections = lang === "hi" ? report.sections_hi : report.sections_en;
               if (sections) {
+                const snapshot =
+                  report.hand_shape && report.seed != null
+                    ? buildPalmSnapshot(report.hand_shape, report.seed, lang)
+                    : null;
                 return (
                   <>
+                    {snapshot && (
+                      <PalmSnapshotCard
+                        title={tr("palm_snapshot_title")}
+                        items={[
+                          {
+                            label: `${tr("palm_snapshot_hand_label")} — ${snapshot.handShape.label}`,
+                            text: snapshot.handShape.text,
+                          },
+                          { label: tr("palm_snapshot_heart_label"), text: snapshot.heartLine.text },
+                          { label: tr("palm_snapshot_fate_label"), text: snapshot.fateLine.text },
+                        ]}
+                      />
+                    )}
                     <div className="section-list">
                       {REPORT_SECTIONS.map((s) => {
                         const data = sections[s.id];
@@ -105,6 +127,7 @@ export default function ReportPage({ params }) {
                               years={data.years}
                               locked={!report.paid}
                               unlockLabel={tr("section_locked_cta")}
+                              insightsLabel={tr("path_ahead_insights_label")}
                             />
                           );
                         }
@@ -113,7 +136,9 @@ export default function ReportPage({ params }) {
                             key={s.id}
                             title={s.title[lang]}
                             hook={data.hook}
-                            body={data.body}
+                            preview={data.preview}
+                            teaser={data.teaser}
+                            deepDive={data.deepDive}
                             locked={!report.paid}
                             unlockLabel={tr("section_locked_cta")}
                           />
