@@ -215,26 +215,35 @@ export async function POST(request) {
       return NextResponse.json({ error: "Reading generation failed" }, { status: 502 });
     }
 
-    const { data: inserted, error } = await getSupabase()
-      .from("reports")
-      .insert({
-        name: body.name,
-        email: body.email,
-        dob: body.dob,
-        birth_time: body.birthTime,
-        birth_time_unknown: body.birthTimeUnknown || false,
-        birth_place: body.birthPlace,
-        hand_shape: handShape,
-        seed,
-        language: body.language || "en",
-        sections_en: sectionsEn,
-        sections_hi: sectionsHi,
-        full_text: flattenSections(sectionsEn),
-        chart,
-        paid: false,
-      })
-      .select()
-      .single();
+    const reportRow = {
+      name: body.name,
+      email: body.email,
+      dob: body.dob,
+      birth_time: body.birthTime,
+      birth_time_unknown: body.birthTimeUnknown || false,
+      birth_place: body.birthPlace,
+      hand_shape: handShape,
+      seed,
+      language: body.language || "en",
+      sections_en: sectionsEn,
+      sections_hi: sectionsHi,
+      full_text: flattenSections(sectionsEn),
+      chart,
+      paid: false,
+    };
+
+    let { data: inserted, error } = await getSupabase().from("reports").insert(reportRow).select().single();
+
+    // "column not found in schema cache" — happens if the `chart` migration
+    // (alter table reports add column if not exists chart jsonb) hasn't
+    // been run yet in this environment. The chart is a bonus feature, not
+    // something reading generation should hard-fail over, so retry once
+    // without it rather than losing the whole reading.
+    if (error && /chart/i.test(error.message || "")) {
+      console.error("`chart` column missing on `reports` — retrying insert without it. Run: alter table reports add column if not exists chart jsonb;");
+      const { chart: _omit, ...rowWithoutChart } = reportRow;
+      ({ data: inserted, error } = await getSupabase().from("reports").insert(rowWithoutChart).select().single());
+    }
 
     if (error) {
       console.error("Supabase insert error:", error);
