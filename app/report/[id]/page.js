@@ -141,7 +141,6 @@ export default function ReportPage({ params }) {
                               years={data.years}
                               locked={!report.paid}
                               unlockLabel={tr("section_locked_cta")}
-                              insightsLabel={tr("path_ahead_insights_label")}
                             />
                           );
                         }

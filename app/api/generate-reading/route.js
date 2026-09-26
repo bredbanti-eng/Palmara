@@ -101,7 +101,7 @@ ${chartContext}
 - "hook" (12-20 शब्द): सबसे ऊपर एक आकर्षक, विशिष्ट, उत्सुकता जगाने वाला वाक्य — यह "preview" की शुरुआती पंक्ति को दोहराए बिना खंड की दिशा की झलक दे।
 - "preview" (55-80 शब्द, 3-4 पूरे वाक्य): यह मुफ़्त सामग्री है, जिसे पाठक बिना भुगतान किए देखता है। यह वास्तव में पूर्ण, उपयोगी और विशिष्ट झलक होनी चाहिए — असली मूल्य, भरावट नहीं — कुछ ऐसा जिस पर पाठक कुछ और पढ़े बिना भी अमल कर सके। इसे किसी अधिक विशिष्ट बात की ओर एक स्वाभाविक मोड़ पर समाप्त करें, बिना अभी वह विशिष्ट बात बताए।
 - "teaser" (8-14 शब्द): एक तीखा, ठोस वाक्य जो बताए कि पेवॉल के पीछे ठीक क्या छिपा है — किसी अध्याय के शीर्षक या प्रश्न जैसा, इतना विशिष्ट कि असली लगे (जैसे "आपकी भाग्य रेखा में छिपा वह एक पैटर्न जो यह समयरेखा पूरी तरह बदल देता है")। कभी सामान्य न हो ("और जानने के लिए अनलॉक करें" जैसा कुछ नहीं)।
-- "deepDive" (380-440 शब्द, 4-6 छोटे पैराग्राफ): भुगतान वाली सामग्री — teaser में किया गया वादा पूरा करते हुए विशिष्ट विवरण को वास्तव में गहराई से समझाएं (केवल एक अंतर्दृष्टि नहीं — तर्क, एक ठोस उदाहरण जहाँ यह घटित होता है, एक अपवाद या बारीकी जो ध्यान देने योग्य हो, और आगे इसका क्या अर्थ है, यह सब शामिल करें), और एक स्पष्ट, व्यक्तिगत, व्यावहारिक सुझाव पर समाप्त हो जिसे पाठक तुरंत इस्तेमाल कर सके।
+- "deepDive" (230-270 शब्द, 2-3 छोटे पैराग्राफ): भुगतान वाली सामग्री — teaser में किया गया वादा पूरा करते हुए विशिष्ट विवरण को वास्तविक गहराई से समझाएं (तर्क, एक ठोस उदाहरण जहाँ यह घटित होता है, और आगे इसका क्या अर्थ है), और एक स्पष्ट, व्यक्तिगत, व्यावहारिक सुझाव पर समाप्त हो जिसे पाठक तुरंत इस्तेमाल कर सके।
 
 पांच खंड लिखें ("personality", "career", "wealth", "love", "challenges"), हर एक के लिए ऊपर बताए अनुसार hook/preview/teaser/deepDive:
 
@@ -112,9 +112,9 @@ ${sectionList}
 - "years": ${currentYear} से ${currentYear + 4} तक ठीक 5 प्रविष्टियाँ, हर एक में:
   - "year": संख्या
   - "theme": मुफ़्त, 8-15 शब्द — उस वर्ष के समग्र भाव के लिए एक संक्षिप्त पारंपरिक लेबल, हर पाठक को दिखे।
-  - "insight": भुगतान वाला, 45-65 शब्द — उस वर्ष के लिए विशिष्ट "क्यों" और 1-2 व्यावहारिक सुझाव, theme से अधिक ठोस।
+  - "insight": भुगतान वाला, 30-45 शब्द — उस वर्ष के लिए विशिष्ट "क्यों" और एक व्यावहारिक सुझाव, theme से अधिक ठोस।
 
-इसके अलावा, एक "closingSynthesis" फ़ील्ड दें — 220-260 शब्दों का एक समापन पैराग्राफ जो ऊपर के सभी खंडों को एक साथ जोड़े और पाठक को एक स्पष्ट, एकीकृत भावना दे कि इस समय उनके लिए सबसे ज़्यादा मायने क्या रखता है। यह केवल PDF रिपोर्ट में दिखेगा, वेबसाइट पर नहीं — इसलिए यह पहले से कही गई बातों का सार बनकर भी नई तरह से बांधे रखने वाला होना चाहिए।
+इसके अलावा, एक "closingSynthesis" फ़ील्ड दें — 160-190 शब्दों का एक समापन पैराग्राफ जो ऊपर के सभी खंडों को एक साथ जोड़े और पाठक को एक स्पष्ट, एकीकृत भावना दे कि इस समय उनके लिए सबसे ज़्यादा मायने क्या रखता है। यह केवल PDF रिपोर्ट में दिखेगा, वेबसाइट पर नहीं — इसलिए यह पहले से कही गई बातों का सार बनकर भी नई तरह से बांधे रखने वाला होना चाहिए।
 
 केवल मान्य JSON लौटाएं, बिल्कुल इसी आकार में, कोई अन्य पाठ नहीं:
 {"personality": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "career": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "wealth": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "love": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "challenges": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "path_ahead": {"hook": "...", "years": [{"year": ${currentYear}, "theme": "...", "insight": "..."}, ...]}, "closingSynthesis": "..."}
@@ -136,7 +136,7 @@ This report is read in two stages — a free preview, then a paid unlock — so 
 - "hook" (12-20 words): a punchy, specific curiosity-building line above everything else — teases the section's angle without repeating the preview's opening line.
 - "preview" (55-80 words, 3-4 full sentences): FREE content the reader sees with no payment. This must be a genuinely complete, useful, specific mini-insight — real value, not filler — something the reader could act on even if they read nothing else. End it on a natural pivot toward something more specific, without revealing that specific thing yet.
 - "teaser" (8-14 words): one sharp, concrete sentence naming exactly what's hidden behind the paywall — phrased like a chapter title or a question, specific enough to feel real (e.g. "The one habit in your fate line that changes this timeline"). Never generic ("Unlock to learn more").
-- "deepDive" (380-440 words, 4-6 short paragraphs): the paid content — the specific detail promised by the teaser, explored in real depth (not just one insight — walk through the reasoning, a concrete scenario where it plays out, a counterpoint or nuance worth flagging, and what it means going forward), ending in one clear, personal, practical takeaway the reader can use.
+- "deepDive" (230-270 words, 2-3 short paragraphs): the paid content — the specific detail promised by the teaser, explored with real depth (the reasoning, a concrete scenario where it plays out, what it means going forward), ending in one clear, personal, practical takeaway the reader can use.
 
 Write five sections ("personality", "career", "wealth", "love", "challenges"), each needing hook/preview/teaser/deepDive as described above:
 
@@ -147,9 +147,9 @@ The sixth section, "path_ahead", is different — a 5-year timeline. Give:
 - "years": exactly 5 entries for ${currentYear} through ${currentYear + 4}, each with:
   - "year": the number
   - "theme": FREE, 8-15 words — a short traditional label for that year's overall flavor, shown to every reader.
-  - "insight": PAID, 45-65 words — the specific "why" and 1-2 pieces of practical guidance for that year, more concrete than the theme.
+  - "insight": PAID, 30-45 words — the specific "why" and one piece of practical guidance for that year, more concrete than the theme.
 
-Also include a "closingSynthesis" field — a 220-260 word closing paragraph that ties all the sections above together into one clear, unified sense of what matters most for this person right now. This appears ONLY in the PDF report, never on the website — so it should feel like a genuine synthesis, not a rehash.
+Also include a "closingSynthesis" field — a 160-190 word closing paragraph that ties all the sections above together into one clear, unified sense of what matters most for this person right now. This appears ONLY in the PDF report, never on the website — so it should feel like a genuine synthesis, not a rehash.
 
 Return ONLY valid JSON in exactly this shape, no other text:
 {"personality": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "career": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "wealth": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "love": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "challenges": {"hook":"...","preview":"...","teaser":"...","deepDive":"..."}, "path_ahead": {"hook": "...", "years": [{"year": ${currentYear}, "theme": "...", "insight": "..."}, ...]}, "closingSynthesis": "..."}

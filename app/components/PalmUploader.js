@@ -380,7 +380,6 @@ export default function PalmUploader() {
                     years={data.years}
                     locked={!paid}
                     unlockLabel={tr("section_locked_cta")}
-                    insightsLabel={tr("path_ahead_insights_label")}
                     onUnlockClick={openUnlockFlow}
                   />
                 );
