@@ -19,7 +19,9 @@ export default function BirthChartSnapshotCard({ chart, lang, title, approxNote,
     <div className="card palm-snapshot-card fade-up">
       <h3 className="section-title">{title}</h3>
       <VedicChartDiagram houseBaseSignIndex={houseBase} planets={chart.planets} lang={lang} />
-      {chart.timeIsApprox && approxNote && <p className="chart-approx-note">{approxNote}</p>}
+      {(chart.timeIsApprox || chart.locationIsApprox) && approxNote && (
+        <p className="chart-approx-note">{approxNote}</p>
+      )}
       <ul className="palm-snapshot-list" style={{ marginTop: "var(--space-4)" }}>
         {ascendantText && (
           <li className="palm-snapshot-item">
