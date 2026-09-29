@@ -12,7 +12,7 @@ export async function POST(request) {
 
     const { data: report } = await getSupabase()
       .from("reports")
-      .select("teaser_text")
+      .select("teaser_text, addon_mantra")
       .eq("id", reportId)
       .single();
 
@@ -23,6 +23,7 @@ export async function POST(request) {
       reportId,
       teaserText: report?.teaser_text,
       pdfBase64,
+      addonMantra: !!report?.addon_mantra,
     });
 
     return NextResponse.json(result);

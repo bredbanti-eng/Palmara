@@ -37,6 +37,7 @@ export default function PalmUploader() {
   const [chart, setChart] = useState(null);
   const [reportId, setReportId] = useState(null);
   const [paid, setPaid] = useState(false);
+  const [addonPurchased, setAddonPurchased] = useState(false);
   const [emailModalStatus, setEmailModalStatus] = useState(null); // null | sending | sent | failed
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -50,6 +51,10 @@ export default function PalmUploader() {
   // what was just chosen. A ref sidesteps that: refs stay the same object
   // across renders, so even a stale closure reads the current value.
   const reportLangRef = useRef(lang);
+  // Same stale-closure problem as reportLangRef: handlePaymentSuccess needs
+  // to know whether the Mantra Companion bump was selected on *this*
+  // checkout, and it's bound before that choice is made.
+  const addonMantraRef = useRef(false);
 
   const steps = [tr("stepper_upload"), tr("stepper_details"), tr("stepper_reading")];
   const stepIndex = reportId ? 2 : handShape ? 1 : 0;
@@ -231,6 +236,7 @@ export default function PalmUploader() {
 
   async function handlePaymentSuccess() {
     setPaid(true);
+    setAddonPurchased(addonMantraRef.current);
     setEmailModalStatus("sending");
 
     const emailLang = reportLangRef.current;
@@ -250,7 +256,14 @@ export default function PalmUploader() {
       const res = await fetch("/api/send-report-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: email, name, lang: reportLangRef.current, reportId, pdfBase64 }),
+        body: JSON.stringify({
+          to: email,
+          name,
+          lang: reportLangRef.current,
+          reportId,
+          pdfBase64,
+          addonMantra: addonMantraRef.current,
+        }),
       });
       const result = await res.json();
       setEmailModalStatus(result.sent ? "sent" : "failed");
@@ -264,10 +277,11 @@ export default function PalmUploader() {
     setShowLangModal(true);
   }
 
-  function chooseReportLanguage(chosenLang) {
+  function chooseReportLanguage(chosenLang, addonMantra) {
     reportLangRef.current = chosenLang;
+    addonMantraRef.current = addonMantra;
     setLang(chosenLang);
-    checkout.payNow();
+    checkout.payNow({ addonMantra });
   }
 
   const generatingMessages = tr("generating_messages");
@@ -341,6 +355,15 @@ export default function PalmUploader() {
                 <IconCheck size={16} />
               </span>
               {lang === "hi" ? "अनलॉक हो गया" : "Unlocked"}
+            </div>
+          )}
+
+          {paid && addonPurchased && (
+            <div className="unlocked-banner unlocked-banner--addon">
+              <span className="check-pop">
+                <IconCheck size={16} />
+              </span>
+              {tr("addon_included_banner")}
             </div>
           )}
 
@@ -436,6 +459,11 @@ export default function PalmUploader() {
                 <button className="btn btn-secondary" onClick={handleDownloadPdf} disabled={isDownloading}>
                   {isDownloading ? tr("preparing_pdf") : tr("download_pdf_again")}
                 </button>
+                {addonPurchased && (
+                  <a className="btn btn-secondary" href="/mantra-companion.pdf" download>
+                    {tr("download_addon_pdf")}
+                  </a>
+                )}
               </div>
               <div className="card upsell-card fade-up stagger-2">
                 <UpsellCTA reportId={reportId} />
@@ -456,9 +484,9 @@ export default function PalmUploader() {
       <UnlockLanguageModal
         open={showLangModal}
         loading={checkout.loading}
-        onChoose={(l) => {
+        onContinue={({ lang: chosenLang, addonMantra }) => {
           setShowLangModal(false);
-          chooseReportLanguage(l);
+          chooseReportLanguage(chosenLang, addonMantra);
         }}
         onClose={() => setShowLangModal(false)}
       />
