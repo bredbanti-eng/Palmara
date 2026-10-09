@@ -1,4 +1,5 @@
 import "./globals.css";
+import Script from "next/script";
 import { LangProvider } from "./components/LangProvider";
 
 export const metadata = {
@@ -19,6 +20,11 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <LangProvider>{children}</LangProvider>
+        {/* GoAffPro affiliate tracking (influencer referral links). Invisible to customers. */}
+        <Script
+          src="https://api.goaffpro.com/loader.js?shop=jmiqfxgdgp"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
